@@ -21,6 +21,10 @@ export async function getCustomersById(req, res) {
       id,
     ]);
     if (customer.rows.length < 1) return res.sendStatus(404);
+    customer.rows = customer.rows.map((c) => ({
+      ...c,
+      birthday: new Date(c.birthday).toISOString().split("T")[0],
+    }));
     res.send(customer.rows);
   } catch (err) {
     res.send(err.message);
@@ -38,7 +42,7 @@ export async function postCustomers(req, res) {
 
     await db.query(
       `INSERT INTO customers (name, phone, cpf, birthday) VALUES ($1, $2, $3, $4);`,
-      [name, phone, cpf, birthday]
+      [name, phone, cpf, new Date(birthday).toISOString().split("T")[0]]
     );
     res.sendStatus(201);
   } catch (err) {
@@ -59,7 +63,7 @@ export async function putCustomers(req, res) {
 
     await db.query(
       `UPDATE customers SET name = $2, phone = $3, birthday = $4 WHERE id = $1`,
-      [id, name, phone, birthday]
+      [id, name, phone, new Date(birthday).toISOString().split("T")[0]]
     );
     res.sendStatus(200);
   } catch (err) {
