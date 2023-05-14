@@ -63,7 +63,7 @@ export async function putCustomers(req, res) {
 
     await db.query(
       `UPDATE customers SET name = $2, phone = $3, birthday = $4 WHERE id = $1;`,
-      [id, name, phone, new Date(birthday).toISOString()]
+      [id, name, phone, new Date(birthday).toISOString().split("T")[0]]
     );
     res.sendStatus(200);
   } catch (err) {
