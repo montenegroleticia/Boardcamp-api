@@ -16,7 +16,7 @@ export async function postGames(req, res) {
     const newGame = await db.query(`SELECT * from games WHERE name = $1;`, [
       name,
     ]);
-    if (newGame.rows.length > 0) return res.status(409);
+    if (newGame.rows.length > 0) return res.sendStatus(409);
 
     await db.query(
       `INSERT INTO games (name, image, "stockTotal", "pricePerDay") VALUES
@@ -26,6 +26,6 @@ export async function postGames(req, res) {
     );
     res.sendStatus(201);
   } catch (err) {
-    res.status(500).send(err.message);
+    res.sendStatus(500).send(err.message);
   }
 }

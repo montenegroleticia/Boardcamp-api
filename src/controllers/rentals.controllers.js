@@ -18,9 +18,9 @@ export async function getRentals(req, res) {
       id: item.id,
       customerId: item.customerId,
       gameId: item.gameId,
-      rentDate: item.rentDate,
+      rentDate: new Date(item.rentDate).toISOString().split("T")[0],
       daysRented: item.daysRented,
-      returnDate: item.returnDate,
+      returnDate: new Date(item.returnDate).toISOString().split("T")[0],
       originalPrice: item.originalPrice,
       delayFee: item.delayFee,
       customer: {
@@ -63,7 +63,15 @@ export async function postRentals(req, res) {
 
     await db.query(
       `INSERT INTO rentals ("customerId", "gameId", "rentDate", "daysRented", "returnDate", "originalPrice", "delayFee") VALUES ($1, $2, $3, $4, $5, $6, $7);`,
-      [customerId, gameId, date, daysRented, null, originalPrice, null]
+      [
+        customerId,
+        gameId,
+        new Date().toISOString().split("T")[0],
+        daysRented,
+        null,
+        originalPrice,
+        null,
+      ]
     );
     res.sendStatus(201);
   } catch (err) {
@@ -84,11 +92,12 @@ export async function postRentalsReturn(req, res) {
       rental.rows[0].gameId,
     ]);
 
-    const returnDate = DateTime.fromISO(date);
-    const rentDate = DateTime.fromISO(rental.rows[0].rentDate);
-    const delayDays = returnDate.diff(rentDate, "days").as("days");
-    const delayFee = Number(game.rows[0].pricePerDay) * delayDays;
 
+    const rentDate = DateTime.fromISO(rental.rows[0].rentDate);
+    const returnDate = DateTime.fromISO(date);
+    const delayDays = returnDate.diff(rentDate, 'days').days;
+    const delayFee = delayDays > 0 ? delayDays * Number(game.rows[0].pricePerDay) : 0;
+    
     await db.query(
       `UPDATE rentals SET "delayFee" = $1, "returnDate" = $2 WHERE id = $3;`,
       [delayFee, date, id]
