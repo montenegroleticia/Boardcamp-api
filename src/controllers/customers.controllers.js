@@ -25,7 +25,7 @@ export async function getCustomersById(req, res) {
       ...c,
       birthday: new Date(c.birthday).toISOString().split("T")[0],
     }));
-    res.send(customer.rows);
+    res.send(customer.rows[0]);
   } catch (err) {
     res.send(err.message);
   }
@@ -62,8 +62,8 @@ export async function putCustomers(req, res) {
     if (customerFake.rows.length >= 1) return res.sendStatus(409);
 
     await db.query(
-      `UPDATE customers SET name = $2, phone = $3, birthday = $4 WHERE id = $1`,
-      [id, name, phone, new Date(birthday).toISOString().split("T")[0]]
+      `UPDATE customers SET name = $2, phone = $3, birthday = $4 WHERE id = $1;`,
+      [id, name, phone, new Date(birthday).toISOString()]
     );
     res.sendStatus(200);
   } catch (err) {
