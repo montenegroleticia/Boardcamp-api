@@ -1,5 +1,5 @@
 import { db } from "../database/database.connection.js";
-const { DateTime } = require("luxon");
+import { DateTime } from "luxon";
 
 const now = DateTime.local();
 const date = now.toISODate();
