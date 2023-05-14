@@ -1,9 +1,6 @@
 import { db } from "../database/database.connection.js";
 import { DateTime } from "luxon";
 
-const now = DateTime.local();
-const date = now.toISODate();
-
 export async function getRentals(req, res) {
   try {
     const rentals = await db.query(
@@ -20,7 +17,9 @@ export async function getRentals(req, res) {
       gameId: item.gameId,
       rentDate: new Date(item.rentDate).toISOString().split("T")[0],
       daysRented: item.daysRented,
-      returnDate: new Date(item.returnDate).toISOString().split("T")[0],
+      returnDate: item.returnDate
+        ? new Date(item.returnDate).toISOString().split("T")[0]
+        : null,
       originalPrice: item.originalPrice,
       delayFee: item.delayFee,
       customer: {
@@ -32,7 +31,7 @@ export async function getRentals(req, res) {
         name: item.gameName,
       },
     }));
-    res.send(getRentals);
+    res.send(JSON.stringify(getRentals));
   } catch (err) {
     res.send(err.message);
   }
@@ -92,12 +91,13 @@ export async function postRentalsReturn(req, res) {
       rental.rows[0].gameId,
     ]);
 
-
+    const now = DateTime.local();
+    const date = now.toISODate();
     const rentDate = DateTime.fromISO(rental.rows[0].rentDate);
     const returnDate = DateTime.fromISO(date);
-    const delayDays = returnDate.diff(rentDate, 'days').days;
+    const delayDays = returnDate.diff(rentDate, "days").days;
     const delayFee = delayDays > 0 ? delayDays * Number(game.rows[0].pricePerDay) : 0;
-    
+
     await db.query(
       `UPDATE rentals SET "delayFee" = $1, "returnDate" = $2 WHERE id = $3;`,
       [delayFee, date, id]

@@ -55,11 +55,11 @@ export async function putCustomers(req, res) {
   const { name, phone, cpf, birthday } = req.body;
 
   try {
-    const customer = await db.query(
-      `SELECT * FROM customers WHERE cpf = $1 and id = $2;`,
+    const customerFake = await db.query(
+      `SELECT * FROM customers WHERE cpf = $1 and id <> $2;`,
       [cpf, id]
     );
-    if (customer.rows.length < 1) return res.sendStatus(409);
+    if (customerFake.rows.length >= 1) return res.sendStatus(409);
 
     await db.query(
       `UPDATE customers SET name = $2, phone = $3, birthday = $4 WHERE id = $1`,
