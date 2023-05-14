@@ -1,10 +1,8 @@
 import { db } from "../database/database.connection.js";
+const { DateTime } = require("luxon");
 
-const now = new Date();
-const day = String(now.getDate()).padStart(2, "0");
-const month = String(now.getMonth() + 1).padStart(2, "0");
-const year = String(now.getFullYear());
-const date = new Date(`${year}-${month}-${day}`);
+const now = DateTime.local();
+const date = now.toISODate();
 
 export async function getRentals(req, res) {
   try {
@@ -49,9 +47,7 @@ export async function postRentals(req, res) {
     ]);
     if (customer.rows.length < 1) return res.sendStatus(400);
 
-    const game = await db.query(`SELECT * FROM games WHERE id = $1;`, [
-      customerId,
-    ]);
+    const game = await db.query(`SELECT * FROM games WHERE id = $1;`, [gameId]);
     if (game.rows.length < 1) return res.sendStatus(400);
 
     const gameRentals = await db.query(
@@ -88,9 +84,10 @@ export async function postRentalsReturn(req, res) {
       rental.rows[0].gameId,
     ]);
 
-    const delayTime = date.getTime() - rental.rows[0].rentDate.getTime();
-    const delayDays = Math.ceil(delayTime / (1000 * 3600 * 24));
-    const delayFee = delayDays * Number(game.rows[0].pricePerDay);
+    const returnDate = DateTime.fromISO(date);
+    const rentDate = DateTime.fromISO(rental.rows[0].rentDate);
+    const delayDays = returnDate.diff(rentDate, "days").as("days");
+    const delayFee = Number(game.rows[0].pricePerDay) * delayDays;
 
     await db.query(
       `UPDATE rentals SET "delayFee" = $1, "returnDate" = $2 WHERE id = $3;`,
