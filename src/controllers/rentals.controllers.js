@@ -91,15 +91,17 @@ export async function postRentalsReturn(req, res) {
       rental.rows[0].gameId,
     ]);
 
-    const delayTime = Math.abs(new Date().getTime() - rental.rows[0].rentDate.getTime()
+    const delayTime = Math.abs(
+      new Date().getTime() - rental.rows[0].rentDate.getTime()
     );
     const delayDays = Math.floor(delayTime / (1000 * 60 * 60 * 24));
-    const delayFee = delayDays * Number(game.rows[0].pricePerDay);
+    let delayFee = null;
 
     if (delayDays > rental.rows[0].daysRented) {
       delayFee =
-        delayDays - rental.rows[0].daysRented * game.rows[0].pricePerDay;
+        (delayDays - rental.rows[0].daysRented) * game.rows[0].pricePerDay;
     }
+
     console.log(delayDays);
     await db.query(
       `UPDATE rentals SET "delayFee" = $1, "returnDate" = $2 WHERE id = $3;`,
